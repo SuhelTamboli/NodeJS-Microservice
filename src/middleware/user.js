@@ -1,3 +1,5 @@
+const bcrypt = require("bcrypt");
+
 const blockFields = (fields = []) => {
   return (req, res, next) => {
     fields.forEach((field) => {
@@ -13,6 +15,31 @@ const blockFields = (fields = []) => {
   };
 };
 
+const encryptPassword = async (req, res, next) => {
+  try {
+    const { password } = req.body;
+    if (!password) {
+      res.status(400).send({
+        msg: `Password is required`,
+        error: `Password is required`,
+        data: null,
+      });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    req.body.password = hashedPassword;
+    next();
+  } catch (error) {
+    console.error("Error encrypting password:", error);
+    return res.status(400).send({
+      msg: `Internal Server Error while encrypting password`,
+      error: `Internal Server Error while encrypting password`,
+      data: null,
+    });
+  }
+};
+
 module.exports = {
   blockFields,
+  encryptPassword,
 };

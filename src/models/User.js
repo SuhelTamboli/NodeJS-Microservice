@@ -15,12 +15,23 @@ const userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
+      unique: true,
       required: [true, "Email is required"],
       validate: {
         validator: (value) => {
           return validator.isEmail(value);
         },
         message: (props) => `${props.value} is not a valid email`,
+      },
+    },
+    password: {
+      type: String,
+      required: [true, "Password is required"],
+      validate: {
+        validator: (value) => {
+          return validator.isStrongPassword(value);
+        },
+        message: "Please enter strong password",
       },
     },
     phone: {

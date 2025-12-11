@@ -8,7 +8,8 @@ require("dotenv").config();
 
 const connectDB = require("./config/database/database");
 const User = require("./models/User");
-const { blockFields } = require("./middleware/user");
+const { blockFields, encryptPassword } = require("./middleware/user");
+const { comparePassword } = require("./utils/user");
 
 // create a new express server
 const express = require("express");
@@ -133,23 +134,77 @@ app.get("/user", async (req, res) => {
 });
 
 //create a sample api to save user to DB
-app.post("/signup", async (req, res) => {
+app.post("/signup", encryptPassword, async (req, res) => {
   //Create a new instance of User model using user data (payload) passed in POST request
-  const newUser = new User(req.body);
+  const newUser = new User({
+    firstName: req.body?.firstName,
+    lastName: req.body?.lastName,
+    email: req.body?.email,
+    password: req.body?.password,
+    phone: req.body?.phone,
+    age: req.body?.age,
+    gender: req.body?.gender,
+    skills: req.body?.skills,
+  });
   try {
     //save user to DB
     const data = await newUser.save();
+    //remove password from response before sending to client
+    const signedUpUser = data.toObject();
+    delete signedUpUser.password;
     //send response of singup API
     res.send({
       msg: "User Signed Up successfully",
       error: null,
-      data: data,
+      data: signedUpUser,
     });
   } catch (error) {
     console.error(error.message);
     //send response in case singup API fails
     res.status(400).send({
       msg: "Error while signing up user",
+      error: error.message,
+      data: null,
+    });
+  }
+});
+
+app.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const existingUser = await User.findOne({ email });
+    //DO NOT send actual msg like email does not exist in DB
+    //send general msg like Invalid Credentials
+    //this is called info leaking
+    if (!existingUser) {
+      return res.status(400).send({
+        msg: "Invalid Credentials",
+        error: "Invalid Credentials",
+        data: null,
+      });
+    }
+    //compare password from request with password in DB
+    const isPasswordValid = await comparePassword(
+      password,
+      existingUser.password
+    );
+    if (!isPasswordValid) {
+      return res.status(400).send({
+        msg: "Invalid Credentials",
+        error: "Invalid Credentials",
+        data: null,
+      });
+    }
+    res.send({
+      msg: "User Logged In successfully",
+      error: null,
+      data: email,
+    });
+  } catch (error) {
+    console.error(error.message);
+    //send response in case login API fails
+    res.status(400).send({
+      msg: "Error while logging in user",
       error: error.message,
       data: null,
     });
