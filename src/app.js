@@ -8,6 +8,7 @@ require("dotenv").config();
 
 const connectDB = require("./config/database/database");
 const User = require("./models/User");
+const { blockFields } = require("./middleware/user");
 
 // create a new express server
 const express = require("express");
@@ -29,28 +30,52 @@ app.delete("/users", async (req, res) => {
   try {
     const deletedUser = await User.findByIdAndDelete(userId);
     if (!deletedUser) {
-      res.send("user not found by id");
+      res.send({
+        msg: "User Not Found By Id",
+        error: null,
+        data: deletedUser,
+      });
     }
+    res.send({
+      msg: "User Deleted successfully",
+      error: null,
+      data: deletedUser,
+    });
     res.send("user deleted successfully");
   } catch (error) {
     console.error(error);
-    //send response in case singup API fails
-    res.status(400).send("Error occurrd while deleting user by id", error);
+    //send response in case deleting user by id API fails
+    res.status(400).send({
+      msg: "Error while deleting user by id",
+      error: error.message,
+      data: null,
+    });
   }
 });
 
 //create a sample api to update user
-app.patch("/users", async (req, res) => {
+//using blockFields middleware to block unwated fields to be updated
+//in this request we are not allowing to update user email
+app.patch("/users", blockFields(["email"]), async (req, res) => {
   const { userId } = req.body;
   try {
     const updatedUser = await User.findByIdAndUpdate(userId, req.body, {
       returnDocument: "after",
+      runValidators: true,
     });
-    res.send("User updated successfully ");
+    res.send({
+      msg: "User Updated successfully",
+      error: null,
+      data: updatedUser,
+    });
   } catch (error) {
     console.error(error);
-    //send response in case singup API fails
-    res.status(400).send("Error occurrd while updating user" + error);
+    //send response in case update API fails
+    res.status(400).send({
+      msg: "Error while updating user data",
+      error: error.message,
+      data: null,
+    });
   }
 });
 
@@ -60,11 +85,19 @@ app.get("/users", async (req, res) => {
     //pass empty object {} when getting all users data
     //returns array of objects
     const users = await User.find({});
-    res.send(users);
+    res.send({
+      msg: "Get All Users successfull",
+      error: null,
+      data: users,
+    });
   } catch (error) {
     console.error(error);
-    //send response in case singup API fails
-    res.status(400).send("Error occurrd while get all users", error);
+    //send response in case get all users API fails
+    res.status(400).send({
+      msg: "Error while updating get all users data",
+      error: error.message,
+      data: null,
+    });
   }
 });
 
@@ -76,13 +109,26 @@ app.get("/user", async (req, res) => {
     //returns array of objects
     const user = await User.find({ email });
     if (user.length === 0) {
-      res.send("user not found");
+      res.send({
+        msg: "User Not Found",
+        error: null,
+        data: user,
+      });
     }
+    res.send({
+      msg: "Get User by Email successfull",
+      error: null,
+      data: user,
+    });
     res.send(user);
   } catch (error) {
     console.error(error);
-    //send response in case singup API fails
-    res.status(400).send("Error occurrd while get user by email", error);
+    //send response in case get user by email API fails
+    res.status(400).send({
+      msg: "Error while updating get user by email",
+      error: error.message,
+      data: null,
+    });
   }
 });
 
@@ -94,11 +140,19 @@ app.post("/signup", async (req, res) => {
     //save user to DB
     const data = await newUser.save();
     //send response of singup API
-    res.send("User Data saved successfully");
+    res.send({
+      msg: "User Signed Up successfully",
+      error: null,
+      data: data,
+    });
   } catch (error) {
-    console.error(error);
+    console.error(error.message);
     //send response in case singup API fails
-    res.status(400).send("Error occurrd while signp", error);
+    res.status(400).send({
+      msg: "Error while signing up user",
+      error: error.message,
+      data: null,
+    });
   }
 });
 
