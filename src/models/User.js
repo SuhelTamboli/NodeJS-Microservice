@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 
 const userSchema = new mongoose.Schema(
   {
@@ -66,6 +68,30 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+//since generating jwt token while logging in is closely associated with User model
+//we can add it in User Schema
+//create a method to generate jwt token when user login
+userSchema.methods.generateJwtToken = async function () {
+  const user = this;
+  const jwtToken = await jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+    expiresIn: "1h",
+  });
+  return jwtToken;
+};
+
+//since validating password provided while logging in with DB password is closely associated with User model
+//we can add method to validate password in User Schema
+//create a method to validate password while user login
+userSchema.methods.validatePassword = async function (passwordInputByUser) {
+  const user = this;
+  const hashedPassword = user.password;
+  const isPasswordValid = await bcrypt.compare(
+    passwordInputByUser,
+    hashedPassword
+  );
+  return isPasswordValid;
+};
 
 const User = mongoose.model("User", userSchema);
 

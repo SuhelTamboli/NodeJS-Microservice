@@ -9,24 +9,30 @@ require("dotenv").config();
 const connectDB = require("./config/database/database");
 const User = require("./models/User");
 const { blockFields, encryptPassword } = require("./middleware/user");
-const { comparePassword } = require("./utils/user");
+const { isAuthorized } = require("./middleware/auth");
 
 // create a new express server
 const express = require("express");
+
+//for parsing cookies sent in request
+const cookieParser = require("cookie-parser");
 
 const app = express();
 
 const PORT = process.env.PORT;
 
-//add middleware to convert JSON send in requesu to JS Object
+//add middleware to convert JSON send in request to JS Object
 //e.g. to read JSON body sent in POST request
 //app.use means this middlware function will be called for every incoming request
 app.use(express.json());
 
+//add middleware to parse cookies coming in request so that we can access it in request handler
+app.use(cookieParser());
+
 //CRUD OPERATIONS
 
 //create a sample api to delete user from DB
-app.delete("/users", async (req, res) => {
+app.delete("/users", isAuthorized, async (req, res) => {
   const { userId } = req.body;
   try {
     const deletedUser = await User.findByIdAndDelete(userId);
@@ -57,7 +63,7 @@ app.delete("/users", async (req, res) => {
 //create a sample api to update user
 //using blockFields middleware to block unwated fields to be updated
 //in this request we are not allowing to update user email
-app.patch("/users", blockFields(["email"]), async (req, res) => {
+app.patch("/users", isAuthorized, blockFields(["email"]), async (req, res) => {
   const { userId } = req.body;
   try {
     const updatedUser = await User.findByIdAndUpdate(userId, req.body, {
@@ -81,7 +87,7 @@ app.patch("/users", blockFields(["email"]), async (req, res) => {
 });
 
 ///create a sample api to get all users from DB
-app.get("/users", async (req, res) => {
+app.get("/users", isAuthorized, async (req, res) => {
   try {
     //pass empty object {} when getting all users data
     //returns array of objects
@@ -103,7 +109,7 @@ app.get("/users", async (req, res) => {
 });
 
 //create a sample api to get one user by email from DB
-app.get("/user", async (req, res) => {
+app.get("/user", isAuthorized, async (req, res) => {
   const { email } = req.body;
   try {
     //pass empty object {} when getting all users data
@@ -184,10 +190,7 @@ app.post("/login", async (req, res) => {
       });
     }
     //compare password from request with password in DB
-    const isPasswordValid = await comparePassword(
-      password,
-      existingUser.password
-    );
+    const isPasswordValid = await existingUser.validatePassword(password);
     if (!isPasswordValid) {
       return res.status(400).send({
         msg: "Invalid Credentials",
@@ -195,6 +198,10 @@ app.post("/login", async (req, res) => {
         data: null,
       });
     }
+    //create jwt token
+    const jwtToken = await existingUser.generateJwtToken();
+    //send jwt token in cookie when user log in to be used in next all requests
+    res.cookie("token", jwtToken);
     res.send({
       msg: "User Logged In successfully",
       error: null,
@@ -205,6 +212,28 @@ app.post("/login", async (req, res) => {
     //send response in case login API fails
     res.status(400).send({
       msg: "Error while logging in user",
+      error: error.message,
+      data: null,
+    });
+  }
+});
+
+app.get("/profile", isAuthorized, async (req, res) => {
+  try {
+    const { user } = req;
+    //delete password field before sending response to client
+    const currentUser = user.toObject();
+    delete currentUser.password;
+    res.send({
+      msg: "User Profile data fetched successfully",
+      error: null,
+      data: currentUser,
+    });
+  } catch (error) {
+    console.error(error.message);
+    //send response in case profile API fails
+    res.status(400).send({
+      msg: "Error while getting user profile",
       error: error.message,
       data: null,
     });
