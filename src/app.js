@@ -11,6 +11,7 @@ const User = require("./models/User");
 const { blockFields } = require("./middleware/user");
 const { isAuthorized } = require("./middleware/auth");
 const authRouter = require("./routes/authRouter");
+const profileRouter = require("./routes/profileRouter");
 
 // create a new express server
 const express = require("express");
@@ -34,6 +35,7 @@ app.use(cookieParser());
 //request sent from client comes to app.js
 //then diverted to appropriate handlers
 app.use("/", authRouter);
+app.use("/", profileRouter);
 
 //create a sample api to delete user from DB
 app.delete("/users", isAuthorized, async (req, res) => {
@@ -137,28 +139,6 @@ app.get("/user", isAuthorized, async (req, res) => {
     //send response in case get user by email API fails
     res.status(400).json({
       msg: "Error while updating get user by email",
-      error: error.message,
-      data: null,
-    });
-  }
-});
-
-app.get("/profile", isAuthorized, async (req, res) => {
-  try {
-    const { user } = req;
-    //delete password field before sending response to client
-    const currentUser = user.toObject();
-    delete currentUser.password;
-    res.json({
-      msg: "User Profile data fetched successfully",
-      error: null,
-      data: currentUser,
-    });
-  } catch (error) {
-    console.error(error.message);
-    //send response in case profile API fails
-    res.status(400).json({
-      msg: "Error while getting user profile",
       error: error.message,
       data: null,
     });

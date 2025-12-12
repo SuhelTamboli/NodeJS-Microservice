@@ -5,6 +5,7 @@ const { encryptPassword } = require("../middleware/user");
 const User = require("../models/User");
 
 //create a sample api to save user to DB
+//POST - /signup
 authRouter.post("/signup", encryptPassword, async (req, res) => {
   //Create a new instance of User model using user data (payload) passed in POST request
   const { firstName, lastName, email, password, phone, age, gender, skills } =
@@ -43,6 +44,7 @@ authRouter.post("/signup", encryptPassword, async (req, res) => {
 });
 
 //create api to login user
+//POST - /login
 authRouter.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
