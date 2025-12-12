@@ -4,7 +4,7 @@ const blockFields = (fields = []) => {
   return (req, res, next) => {
     fields.forEach((field) => {
       if (req.body[field] !== undefined) {
-        res.status(400).send({
+        res.status(400).json({
           msg: `${field} cannot be updated`,
           error: `Field '${field}' is not allowed in update`,
           data: null,
@@ -19,7 +19,7 @@ const encryptPassword = async (req, res, next) => {
   try {
     const { password } = req.body;
     if (!password) {
-      res.status(400).send({
+      res.status(400).json({
         msg: `Password is required`,
         error: `Password is required`,
         data: null,
@@ -31,7 +31,7 @@ const encryptPassword = async (req, res, next) => {
     next();
   } catch (error) {
     console.error("Error encrypting password:", error);
-    return res.status(400).send({
+    return res.status(400).json({
       msg: `Internal Server Error while encrypting password`,
       error: `Internal Server Error while encrypting password`,
       data: null,

@@ -5,7 +5,7 @@ const isAuthorized = async (req, res, next) => {
   try {
     const { token } = req.cookies;
     if (!token) {
-      res.status(400).send({
+      res.status(400).json({
         msg: `Auth token is required`,
         error: `Auth token is required`,
         data: null,
@@ -14,7 +14,7 @@ const isAuthorized = async (req, res, next) => {
     const { id } = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(id);
     if (!user) {
-      res.status(400).send({
+      res.status(400).json({
         msg: `wrong Auth token`,
         error: `wrong Auth token`,
         data: null,
@@ -25,7 +25,7 @@ const isAuthorized = async (req, res, next) => {
     next();
   } catch (error) {
     console.error("Error while authorizing", error);
-    return res.status(400).send({
+    return res.status(400).json({
       msg: `Internal Server Error while authorizing`,
       error: `Internal Server Error while authorizing`,
       data: null,

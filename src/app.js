@@ -37,22 +37,22 @@ app.delete("/users", isAuthorized, async (req, res) => {
   try {
     const deletedUser = await User.findByIdAndDelete(userId);
     if (!deletedUser) {
-      res.send({
+      res.json({
         msg: "User Not Found By Id",
         error: null,
         data: deletedUser,
       });
     }
-    res.send({
+    res.json({
       msg: "User Deleted successfully",
       error: null,
       data: deletedUser,
     });
-    res.send("user deleted successfully");
+    res.json("user deleted successfully");
   } catch (error) {
     console.error(error);
     //send response in case deleting user by id API fails
-    res.status(400).send({
+    res.status(400).json({
       msg: "Error while deleting user by id",
       error: error.message,
       data: null,
@@ -70,7 +70,7 @@ app.patch("/users", isAuthorized, blockFields(["email"]), async (req, res) => {
       returnDocument: "after",
       runValidators: true,
     });
-    res.send({
+    res.json({
       msg: "User Updated successfully",
       error: null,
       data: updatedUser,
@@ -78,7 +78,7 @@ app.patch("/users", isAuthorized, blockFields(["email"]), async (req, res) => {
   } catch (error) {
     console.error(error);
     //send response in case update API fails
-    res.status(400).send({
+    res.status(400).json({
       msg: "Error while updating user data",
       error: error.message,
       data: null,
@@ -92,7 +92,7 @@ app.get("/users", isAuthorized, async (req, res) => {
     //pass empty object {} when getting all users data
     //returns array of objects
     const users = await User.find({});
-    res.send({
+    res.json({
       msg: "Get All Users successfull",
       error: null,
       data: users,
@@ -100,8 +100,8 @@ app.get("/users", isAuthorized, async (req, res) => {
   } catch (error) {
     console.error(error);
     //send response in case get all users API fails
-    res.status(400).send({
-      msg: "Error while updating get all users data",
+    res.status(400).json({
+      msg: "Error while get all users data",
       error: error.message,
       data: null,
     });
@@ -116,22 +116,22 @@ app.get("/user", isAuthorized, async (req, res) => {
     //returns array of objects
     const user = await User.find({ email });
     if (user.length === 0) {
-      res.send({
+      res.json({
         msg: "User Not Found",
         error: null,
         data: user,
       });
     }
-    res.send({
+    res.json({
       msg: "Get User by Email successfull",
       error: null,
       data: user,
     });
-    res.send(user);
+    res.json(user);
   } catch (error) {
     console.error(error);
     //send response in case get user by email API fails
-    res.status(400).send({
+    res.status(400).json({
       msg: "Error while updating get user by email",
       error: error.message,
       data: null,
@@ -159,7 +159,7 @@ app.post("/signup", encryptPassword, async (req, res) => {
     const signedUpUser = data.toObject();
     delete signedUpUser.password;
     //send response of singup API
-    res.send({
+    res.json({
       msg: "User Signed Up successfully",
       error: null,
       data: signedUpUser,
@@ -167,7 +167,7 @@ app.post("/signup", encryptPassword, async (req, res) => {
   } catch (error) {
     console.error(error.message);
     //send response in case singup API fails
-    res.status(400).send({
+    res.status(400).json({
       msg: "Error while signing up user",
       error: error.message,
       data: null,
@@ -183,7 +183,7 @@ app.post("/login", async (req, res) => {
     //send general msg like Invalid Credentials
     //this is called info leaking
     if (!existingUser) {
-      return res.status(400).send({
+      return res.status(400).json({
         msg: "Invalid Credentials",
         error: "Invalid Credentials",
         data: null,
@@ -192,7 +192,7 @@ app.post("/login", async (req, res) => {
     //compare password from request with password in DB
     const isPasswordValid = await existingUser.validatePassword(password);
     if (!isPasswordValid) {
-      return res.status(400).send({
+      return res.status(400).json({
         msg: "Invalid Credentials",
         error: "Invalid Credentials",
         data: null,
@@ -201,8 +201,7 @@ app.post("/login", async (req, res) => {
     //create jwt token
     const jwtToken = await existingUser.generateJwtToken();
     //send jwt token in cookie when user log in to be used in next all requests
-    res.cookie("token", jwtToken);
-    res.send({
+    res.cookie("token", jwtToken).json({
       msg: "User Logged In successfully",
       error: null,
       data: email,
@@ -210,7 +209,7 @@ app.post("/login", async (req, res) => {
   } catch (error) {
     console.error(error.message);
     //send response in case login API fails
-    res.status(400).send({
+    res.status(400).json({
       msg: "Error while logging in user",
       error: error.message,
       data: null,
@@ -224,7 +223,7 @@ app.get("/profile", isAuthorized, async (req, res) => {
     //delete password field before sending response to client
     const currentUser = user.toObject();
     delete currentUser.password;
-    res.send({
+    res.json({
       msg: "User Profile data fetched successfully",
       error: null,
       data: currentUser,
@@ -232,7 +231,7 @@ app.get("/profile", isAuthorized, async (req, res) => {
   } catch (error) {
     console.error(error.message);
     //send response in case profile API fails
-    res.status(400).send({
+    res.status(400).json({
       msg: "Error while getting user profile",
       error: error.message,
       data: null,
