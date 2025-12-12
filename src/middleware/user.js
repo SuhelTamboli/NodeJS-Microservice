@@ -28,7 +28,7 @@ const encryptPassword = async (req, res, next) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     req.body.password = hashedPassword;
-    next();
+    return next();
   } catch (error) {
     console.error("Error encrypting password:", error);
     return res.status(400).json({
