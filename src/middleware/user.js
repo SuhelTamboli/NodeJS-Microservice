@@ -1,10 +1,10 @@
 const bcrypt = require("bcrypt");
 
-const blockFields = (fields = []) => {
+const blockFieldsFromUpdate = (fields = []) => {
   return (req, res, next) => {
     fields.forEach((field) => {
       if (req.body[field] !== undefined) {
-        res.status(400).json({
+        return res.status(400).json({
           msg: `${field} cannot be updated`,
           error: `Field '${field}' is not allowed in update`,
           data: null,
@@ -40,6 +40,6 @@ const encryptPassword = async (req, res, next) => {
 };
 
 module.exports = {
-  blockFields,
+  blockFieldsFromUpdate,
   encryptPassword,
 };

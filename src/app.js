@@ -8,10 +8,11 @@ require("dotenv").config();
 
 const connectDB = require("./config/database/database");
 const User = require("./models/User");
-const { blockFields } = require("./middleware/user");
+const { blockFieldsFromUpdate } = require("./middleware/user");
 const { isAuthorized } = require("./middleware/auth");
 const authRouter = require("./routes/authRouter");
 const profileRouter = require("./routes/profileRouter");
+const connectionRequestRouter = require("./routes/connectionRequestRouter");
 
 // create a new express server
 const express = require("express");
@@ -36,6 +37,7 @@ app.use(cookieParser());
 //then diverted to appropriate handlers
 app.use("/", authRouter);
 app.use("/", profileRouter);
+app.use("/", connectionRequestRouter);
 
 //create a sample api to delete user from DB
 app.delete("/users", isAuthorized, async (req, res) => {
@@ -67,30 +69,35 @@ app.delete("/users", isAuthorized, async (req, res) => {
 });
 
 //create a sample api to update user
-//using blockFields middleware to block unwated fields to be updated
+//using blockFieldsFromUpdate middleware to block unwated fields to be updated
 //in this request we are not allowing to update user email
-app.patch("/users", isAuthorized, blockFields(["email"]), async (req, res) => {
-  const { userId } = req.body;
-  try {
-    const updatedUser = await User.findByIdAndUpdate(userId, req.body, {
-      returnDocument: "after",
-      runValidators: true,
-    });
-    res.json({
-      msg: "User Updated successfully",
-      error: null,
-      data: updatedUser,
-    });
-  } catch (error) {
-    console.error(error);
-    //send response in case update API fails
-    res.status(400).json({
-      msg: "Error while updating user data",
-      error: error.message,
-      data: null,
-    });
+app.patch(
+  "/users",
+  isAuthorized,
+  blockFieldsFromUpdate(["email"]),
+  async (req, res) => {
+    const { userId } = req.body;
+    try {
+      const updatedUser = await User.findByIdAndUpdate(userId, req.body, {
+        returnDocument: "after",
+        runValidators: true,
+      });
+      res.json({
+        msg: "User Updated successfully",
+        error: null,
+        data: updatedUser,
+      });
+    } catch (error) {
+      console.error(error);
+      //send response in case update API fails
+      res.status(400).json({
+        msg: "Error while updating user data",
+        error: error.message,
+        data: null,
+      });
+    }
   }
-});
+);
 
 ///create a sample api to get all users from DB
 app.get("/users", isAuthorized, async (req, res) => {

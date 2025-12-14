@@ -3,7 +3,10 @@ const express = require("express");
 const profileRouter = express.Router();
 
 const { isAuthorized } = require("../middleware/auth");
-const { blockFields, encryptPassword } = require("../middleware/user");
+const {
+  blockFieldsFromUpdate,
+  encryptPassword,
+} = require("../middleware/user");
 const User = require("../models/User");
 
 //create api to get profile details of logged in user
@@ -31,13 +34,13 @@ profileRouter.get("/profile", isAuthorized, async (req, res) => {
 });
 
 //create a api to update user profile data
-//using blockFields middleware to block unwated fields to be updated
+//using blockFieldsFromUpdate middleware to block unwated fields to be updated
 //in this request we are not allowing to update user email and password
 //PATCH - /profile
 profileRouter.patch(
   "/profile",
   isAuthorized,
-  blockFields(["email", "password"]),
+  blockFieldsFromUpdate(["email", "password"]),
   async (req, res) => {
     const { userId } = req.body;
     try {
