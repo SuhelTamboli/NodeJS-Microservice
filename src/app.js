@@ -13,6 +13,7 @@ const { isAuthorized } = require("./middleware/auth");
 const authRouter = require("./routes/authRouter");
 const profileRouter = require("./routes/profileRouter");
 const connectionRequestRouter = require("./routes/connectionRequestRouter");
+const userRouter = require("./routes/userRouter");
 
 // create a new express server
 const express = require("express");
@@ -38,6 +39,7 @@ app.use(cookieParser());
 app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", connectionRequestRouter);
+app.use("/", userRouter);
 
 //create a sample api to delete user from DB
 app.delete("/users", isAuthorized, async (req, res) => {
