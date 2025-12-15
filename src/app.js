@@ -17,6 +17,7 @@ const userRouter = require("./routes/userRouter");
 
 // create a new express server
 const express = require("express");
+const cors = require("cors");
 
 //for parsing cookies sent in request
 const cookieParser = require("cookie-parser");
@@ -24,6 +25,9 @@ const cookieParser = require("cookie-parser");
 const app = express();
 
 const PORT = process.env.PORT;
+
+//add cors middleware to allow cross origin request
+app.use(cors());
 
 //add middleware to convert JSON send in request to JS Object
 //e.g. to read JSON body sent in POST request
